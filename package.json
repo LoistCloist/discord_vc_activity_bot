@@ -1,26 +1,4 @@
 {
-  "name": "discord_vc_activity_bot",
-  "version": "1.0.0",
-  "description": "This discord bot will notify me if there are any active voice calls in the servers the bot is in.",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/LoistCloist/discord_vc_activity_bot.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/LoistCloist/discord_vc_activity_bot/issues"
-  },
-  "homepage": "https://github.com/LoistCloist/discord_vc_activity_bot#readme",
-  "devDependencies": {
-    "@eslint/js": "^9.28.0",
-    "eslint": "^9.28.0"
-  },
   "dependencies": {
     "discord.js": "^14.19.3"
   }

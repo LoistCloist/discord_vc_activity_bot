@@ -1,0 +1,46 @@
+https://discord.com/developers/docs/resources/voice#voice-state-object
+styrene sheets
+
+1. the bot is put into the channels it wants to monitor.
+2. it has a list of channels it wants to monitor.
+    a. it will also have a list of voice channels to monitor.
+3. if there are more than one person in a voice channel.
+4. how to find 
+
+what does the require keyword do?
+what does the 
+monitor when changes are made to a voice channel
+gateway event is channelupdate
+
+Features:
+    1. Add discord bot to your server
+    2. when you call it !hey/!setup
+    3. it will dm you for settings.
+    4. which channels to monitor
+    5. which members to check for.
+    6. how many members until it pings you.
+    7. complete setup and now it will listen.
+
+a) !setup to find bot-channel
+b) once in bot channel wait for !lelper to dm users.
+c) database for scaling
+THE BOT DMS THE USER IF THE CONDITIONS ARE MET
+
+Implementing bot channel command: (not important)
+    1. check if a key-value pair exist for this guild
+    2. if not prompt for !setup
+    3. only accept users with manage_server permissions.
+
+Implementing !lelper: 
+    1. if a user types !lelper, lelper will dm the user.
+
+Settings: voice channels to monitor
+When to be notified.
+
+let's scale it back. notifies whenever there is more than 2 people in any voice channel.
+
+1. when people join, check if that server fulfils the activity.
+    a) when server is active dm.
+2. when people leave, check if the server is active.
+    a) if server is no longer active, dm.
+

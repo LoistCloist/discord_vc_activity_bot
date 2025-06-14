@@ -97,6 +97,7 @@ client.on(Events.MessageCreate, async message => {
 });
 
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
+    console.log("three voice state updates?");
     if (oldState.channelId === null && newState.channelId != null) { //join
         //check if new server is now active.
         if (newState.channel.members.size >= 2) {
@@ -106,7 +107,6 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
                 if (userSettings[userId] === true) {
                     const userToDm = await client.users.fetch(userId);
                     await userToDm.send(`${activeChannelName} in ${activeGuildName} is just went active!`);
-                    await userToDm.send
                 }
             }
         }

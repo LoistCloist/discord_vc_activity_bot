@@ -1,0 +1,25 @@
+{
+  "GuildID": {
+    "UserID": {
+      "trigger_weight": 2,
+      "Channels": [
+        "ChannelID",
+        "ChannelID2"
+      ],
+      "VIPS": [
+        "name1,",
+        "name2"
+      ],
+      "tracking": false
+    }
+  },
+  "1258899802016583721": {
+    "379623574304063508": {
+      "trigger": "1",
+      "channels": [
+        "1258899802612043779"
+      ],
+      "tracking": true
+    }
+  }
+}

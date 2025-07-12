@@ -169,13 +169,6 @@ If you encounter any issues or have questions:
 2. Create a new issue with detailed information
 3. Include your Node.js version and Discord.js version
 
-## 🔮 Future Features
-
-- [ ] Cloud hosting support
-- [ ] NLP integration for better user experience
-- [ ] Anti-spam protection for notifications
-- [ ] Web dashboard for settings management
-- [ ] Analytics and activity reports
 
 ---
 

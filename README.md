@@ -1,94 +1,175 @@
-# Discord VC Activity Bot
+# Discord VC Activity Bot 🎧
 
-A Discord bot that monitors voice channel activity and notifies users when channels become active or inactive.
+A smart Discord bot that monitors voice channel activity and sends you personalized notifications when your favorite channels become active or inactive. Perfect for staying connected with your community!
 
-## How the Events System Works
+## ✨ Features
 
-### Events Folder Structure
+- **Smart Voice Channel Monitoring** - Tracks activity in specific voice channels
+- **VIP User Tracking** - Get notified when specific users join/leave channels
+- **Customizable Triggers** - Set minimum member count requirements
+- **Real-time DM Notifications** - Receive instant updates via private messages
+- **Interactive Settings** - Easy-to-use slash commands and menus
+- **Multi-Server Support** - Works across all servers where the bot is present
 
-The `events/` folder contains all Discord.js event handlers. Each event file follows this structure:
+## 🚀 Quick Start
 
-```javascript
-const { Events } = require('discord.js');
+### Invite the Bot to Your Server
 
-module.exports = {
-    name: Events.EventName,  // The Discord.js event name
-    once: false,             // Set to true for events that should only fire once
-    async execute(...args, client) {
-        // Event handling logic here
-        // The client parameter is automatically passed by the event loader
-    }
-};
+1. **Click the invite link below to add the bot to your Discord server:**
+   ```
+   [BOT_INVITE_LINK_WILL_GO_HERE]
+   ```
+
+2. **Grant the necessary permissions:**
+   - Read Messages/View Channels
+   - Send Messages
+   - Use Slash Commands
+   - Connect to Voice Channels
+   - View Voice Channels
+
+3. **Start using the bot!**
+   - Use `/lelper_on` to enable activity tracking
+   - Use `/lelper_settings` to customize your preferences
+   - The bot will start monitoring voice channels and send you DM notifications
+
+### Bot Permissions Required
+
+The bot needs the following permissions to function properly:
+- **Send Messages** - To respond to commands
+- **Use Slash Commands** - For the interactive command system
+- **Connect to Voice Channels** - To monitor voice activity
+- **View Voice Channels** - To see who's in voice channels
+- **Send Direct Messages** - To send you notifications
+
+## 📋 Commands
+
+### Slash Commands
+
+| Command | Description |
+|---------|-------------|
+| `/lelper_on` | Enable activity tracking for yourself |
+| `/lelper_off` | Disable activity tracking |
+| `/lelper_settings` | Configure your tracking preferences |
+| `/lelper_set_bot_channel` | Set the bot's command channel |
+
+### Legacy Text Commands
+
+| Command | Description |
+|---------|-------------|
+| `!lelper` | Enable activity tracking |
+| `!lelperStop` | Disable activity tracking |
+| `!setBotChannel` | Set bot channel |
+
+## ⚙️ Configuration
+
+Use `/lelper_settings` to customize your experience:
+
+### Voice Channels
+- Select specific voice channels to monitor
+- Choose "Any" to monitor all voice channels
+
+### VIP Users
+- Select specific users to track
+- Choose "Any" to track all users
+- Get notified when VIP users join/leave
+
+### Trigger Settings
+- Set minimum member count (1-25 users)
+- Bot will only notify when this threshold is met
+
+## 🔧 How It Works
+
+The bot works by monitoring voice channels in your Discord server and sending you personalized notifications when activity changes. Here's what happens:
+
+1. **Setup**: You configure which channels, users, and conditions to monitor
+2. **Monitoring**: The bot watches voice channel activity in real-time
+3. **Detection**: When your criteria are met, the bot detects the change
+4. **Notification**: You receive a DM with details about the activity change
+
+### What You'll Get Notified About
+
+- **Channel Active**: When a voice channel becomes active according to your settings
+- **Channel Inactive**: When a voice channel is no longer active
+- **VIP Changes**: When important users join or leave monitored channels
+
+## 🏗️ For Developers
+
+This section is for developers who want to contribute to the bot or run their own instance.
+
+### Prerequisites
+- Node.js (v16 or higher)
+- A Discord Bot Token
+- Discord.js v14
+
+### Local Development Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/LoistCloist/discord_vc_activity_bot.git
+   cd discord_vc_activity_bot
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up your bot token**
+   Create a `config.json` file in the root directory:
+   ```json
+   {
+     "token": "YOUR_DISCORD_BOT_TOKEN_HERE"
+   }
+   ```
+
+4. **Deploy slash commands** (choose one):
+   ```bash
+   # For global deployment (takes up to 1 hour to propagate)
+   node deploy-commands-global.js
+   
+   # For local testing (immediate)
+   node deploy-commands-local.js
+   ```
+
+5. **Start the bot**
+   ```bash
+   node index.js
+   ```
+
+### Project Structure
+
+```
+discord_vc_activity_bot/
+├── commands/           # Slash command definitions
+├── events/            # Discord.js event handlers
+├── utils/             # Helper functions and utilities
+├── data/              # JSON storage files
+├── index.js           # Main bot entry point
+├── deploy-commands-*.js # Command deployment scripts
+└── README.md          # This file
 ```
 
-### Available Events
+## 🤝 Contributing
 
-- **`onReady.js`** - Handles bot startup and initialization
-- **`onMessageCreate.js`** - Handles legacy text commands (!lelper, !lelperStop, etc.)
-- **`onInteractionCreate.js`** - Handles all interaction types:
-  - Slash commands
-  - Button interactions
-  - Select menu interactions
-  - Modal submissions
-  - Autocomplete interactions
-  - Context menu commands
-- **`onVoiceStateUpdate.js`** - Monitors voice channel activity and sends notifications
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-### Adding New Events
+## 📝 License
 
-1. Create a new file in the `events/` folder (e.g., `onGuildMemberAdd.js`)
-2. Follow the standard event structure above
-3. The event will be automatically loaded when the bot starts
+This project is open source and available under the [MIT License](LICENSE).
 
-### Event Loading
+## 🆘 Support
 
-Events are automatically loaded in `index.js` using this code:
+If you encounter any issues or have questions:
 
-```javascript
-// Load events
-const eventsPath = path.join(__dirname, 'events');
-const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+1. Check the [Issues](https://github.com/LoistCloist/discord_vc_activity_bot/issues) page
+2. Create a new issue with detailed information
+3. Include your Node.js version and Discord.js version
 
-for (const file of eventFiles) {
-    const filePath = path.join(eventsPath, file);
-    const event = require(filePath);
-    
-    if (event.once) {
-        client.once(event.name, (...args) => event.execute(...args, client));
-    } else {
-        client.on(event.name, (...args) => event.execute(...args, client));
-    }
-    console.log(`Loaded event: ${event.name}`);
-}
-```
 
-## Commands
+---
 
-The `commands/` folder contains slash command definitions. Each command file exports:
-- `data`: SlashCommandBuilder configuration
-- `execute`: Function to handle the command
-
-## Usage
-
-1. Set up your bot token in `config.json`
-2. Run `npm install` to install dependencies
-3. Start the bot with `node index.js`
-
-## Features
-
-- Monitor voice channel activity
-- Send DM notifications when channels become active/inactive
-- Legacy text commands for basic functionality
-- Modern slash commands for settings
-- Interactive components (buttons, select menus)
-
-# discord_vc_activity_bot
-This discord bot will notify me if there are any active voice calls in the servers the bot is in.
-!lelper - the bot will now notify you of servers that are active.
-!lelperStop - the bot will not stop notifying you of servers that are active.
-!setBotChannel - the bot will consider this to be the active bot channel.
-
-Features to implement:
-    1. Hosting on cloud.
-    2. NLP integration for better user experience.
-    3. Make sure users are not spammed by multiple joins/leaves.
+**Made with ❤️ for the Discord community**

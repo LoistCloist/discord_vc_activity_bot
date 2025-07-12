@@ -1,159 +1,56 @@
 // Require the necessary discord.js classes
-const { Client, Events, GatewayIntentBits, Partials } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, Collection } = require('discord.js');
 const { token } = require('./config.json');
-
-//loading botChannels.json into memory
 const fs = require('fs');
-const botChannelPath = './botChannels.json';
-let botChannels = {};
-function loadBotChannels() {
-    if (fs.existsSync(botChannelPath)) {
-        botChannels = JSON.parse(fs.readFileSync(botChannelPath));
-    }
-}
-function saveBotChannels() {
-    fs.writeFileSync(botChannelPath, JSON.stringify(botChannels, null, 2));
-}
-loadBotChannels();
-
-//loading userSettings.json into memory
-const userSettingsPath = './userSettings.json';
-let userSettings = {};
-function loadUserSettings() {
-    if (fs.existsSync(userSettingsPath)) {
-        userSettings = JSON.parse(fs.readFileSync(userSettingsPath));
-    }
-}
-function saveUserSettings() {
-    fs.writeFileSync(userSettingsPath, JSON.stringify(userSettings, null, 2));
-}
-loadUserSettings();
-
-async function messageHandler(message) {
-    if (message.author.bot || !message.guild) return; //makes sure the dm is not a 
-    switch (message.content) {
-        case '!lelper':
-            if (message.guildId in botChannels) {
-                if (!message.channelId == botChannels[message.guildId]) return;
-                try {
-                    await message.author.send('I will start notifying you if there are more than 2 people in a voice channel in this server.');
-                    userSettings[message.author.id] = true;
-                    saveUserSettings();
-                } catch (err) {
-                    console.error('Failed to DM user: ', err);
-                    await message.reply('I couldnt DM you!');
-                }
-            }
-            else {
-                message.reply('A bot channel has not been set for this server or this is not the bot channel. \
-                    Set botchannel by typing !setLelperBotChannel in the channel you want to set as the bot channel.');
-            }
-            break;
-        case '!lelperStop':
-            if (message.guildId in botChannels) {
-                if (!message.channelId == botChannels[message.guildId]) return;
-                try {
-                    await message.author.send('I will STOP notifying you if there are more than 2 people in a voice channel in this server.');
-                    userSettings[message.author.id] = false;
-                    saveUserSettings();
-                } catch (err) {
-                    console.error('Failed to DM user: ', err);
-                    await message.reply('I couldnt DM you!');
-                }
-            }
-            else {
-                message.reply('A bot channel has not been set for this server or this is not the bot channel. \
-                    Set botchannel by typing !setLelperBotChannel in the channel you want to set as the bot channel.');
-            }
-            break;
-        case '!setLelperBotChannel':
-            if (!message.member.permissions.has('ManageGuild')) {
-                message.reply("You need manage server permissions.");
-                return;
-            }
-            botChannels[message.guildId] = message.channelId;
-            saveBotChannels();
-            break;
-        default:
-            break;
-    }
-}
+const path = require('path');
 
 // Create a new client instance
-const client = new Client({ intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.GuildVoiceStates,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.DirectMessages
+const client = new Client({ 
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.GuildMembers
     ],
     partials: [Partials.Channel] 
 });
 
-client.once(Events.ClientReady, readyClient => {console.log(`Ready! Logged in as ${readyClient.user.tag}`);});
+// Create a collection to store commands
+client.commands = new Collection();
 
-client.on(Events.MessageCreate, async message => {
-    messageHandler(message);
-});
+// Load commands
+const commandsPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
-    console.log("three voice state updates?");
-    if (oldState.channelId === null && newState.channelId != null) { //join
-        //check if new server is now active.
-        if (newState.channel.members.size >= 2) {
-            const activeChannelName = newState.channel.name;
-            const activeGuildName = newState.guild.name;
-            for (const userId in userSettings) {
-                if (userSettings[userId] === true) {
-                    const userToDm = await client.users.fetch(userId);
-                    await userToDm.send(`${activeChannelName} in ${activeGuildName} is just went active!`);
-                }
-            }
-        }
+for (const file of commandFiles) {
+    const filePath = path.join(commandsPath, file);
+    const command = require(filePath);
+    
+    // Set a new item in the Collection with the key as the command name and the value as the exported module
+    if ('data' in command && 'execute' in command) {
+        client.commands.set(command.data.name, command);
+        console.log(`Loaded command: ${command.data.name}`);
+    } else {
+        console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
     }
-    else if (oldState.channelId != null && newState.channelId === null) {//leave
-        //check if oldstate is still active.
-        if (oldState.channel.members.size < 2) {
-            const activeChannelName = oldState.channel.name;
-            const activeGuildName = oldState.guild.name;
-            for (const userId in userSettings) {
-                if (userSettings[userId] === true) {
-                    const userToDm = await client.users.fetch(userId);
-                    await userToDm.send(`${activeChannelName} in ${activeGuildName} is no longer active!`);
-                    await userToDm.send
-                }
-            }
-        }
-    }
-    else if (oldState.channelId === newState.channelId) {// not join/leave/move
-        return; //do nothing
-    }
-    else { //moves
-        //check both
-        if (newState.channel.members.size >= 2) {
-            const activeChannelName = newState.channel.name;
-            const activeGuildName = newState.guild.name;
-            for (const userId in userSettings) {
-                if (userSettings[userId] === true) {
-                    const userToDm = await client.users.fetch(userId);
-                    await userToDm.send(`${activeChannelName} in ${activeGuildName} is just went active!`);
-                    await userToDm.send
-                }
-            }
-        }
-        if (oldState.channel.members.size < 2) {
-            const activeChannelName = oldState.channel.name;
-            const activeGuildName = oldState.guild.name;
-            for (const userId in userSettings) {
-                if (userSettings[userId] === true) {
-                    const userToDm = await client.users.fetch(userId);
-                    await userToDm.send(`${activeChannelName} in ${activeGuildName} is no longer active!`);
-                    await userToDm.send
-                }
-            }
-        }
-    }
-});
+}
 
+// Load events
+const eventsPath = path.join(__dirname, 'events');
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+
+for (const file of eventFiles) {
+    const filePath = path.join(eventsPath, file);
+    const event = require(filePath);
+    
+    if (event.once) {
+        client.once(event.name, (...args) => event.execute(...args, client));
+    } else {
+        client.on(event.name, (...args) => event.execute(...args, client));
+    }
+    console.log(`Loaded event: ${event.name}`);
+}
 // Log in to Discord with your client's token
 client.login(token);

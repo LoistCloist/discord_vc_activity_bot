@@ -14,7 +14,7 @@ module.exports = {
         
         await interaction.reply({
             content: `This channel has been set as the bot channel for this server.`,
-            ephemeral: true
+            flags: 64
         })
     }
 }

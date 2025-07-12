@@ -13,105 +13,141 @@ module.exports = {
                 await command.execute(interaction, client);
             } catch (error) {
                 console.error(error);
-                if (interaction.replied || interaction.deferred) {
-                    await interaction.followUp({ content: 'Error executing this command',   flags: MessageFlags.Ephemeral
-                    });
-
-                }
-                else {
-                    await interaction.reply({content: `There was an error executing this command!`,   flags: MessageFlags.Ephemeral
-                    });
+                try {
+                    if (interaction.replied || interaction.deferred) {
+                        await interaction.followUp({ 
+                            content: 'Error executing this command', 
+                            flags: MessageFlags.Ephemeral
+                        });
+                    } else {
+                        await interaction.reply({
+                            content: `There was an error executing this command!`, 
+                            flags: MessageFlags.Ephemeral
+                        });
+                    }
+                } catch (replyError) {
+                    console.error('Failed to send error message:', replyError);
                 }
             }
             return;
         }
 
-        if (interaction.isButton() && !interaction.customId === 'submit_button') { //settings button
-            //handle select menu interactions
-            const menuCustomId = interaction.customId;
-            let selections = userSelections.get(userId) || {};
-            switch (menuCustomId) {
-                case 'vc_select_menu':
-                    selections.voiceChannels = interaction.values;
-                    break;
-                case 'member_select_menu':
-                    selections.VIPS = interaction.values;
-                    break;
-                case 'trigger_select_menu':
-                    selections.trigger = interaction.values[0];
-                    break;
+        if (interaction.isButton() && interaction.customId !== 'submit_button') {
+            // Handle non-submit button interactions (if any)
+            try {
+                await interaction.reply({
+                    content: 'Button pressed!',
+                    flags: MessageFlags.Ephemeral
+                });
+            } catch (error) {
+                console.error('Failed to reply to button interaction:', error);
             }
-            userSelections.set(userId, selections);
-            await interaction.reply({
-                content: 'Saved! Submit to save your settings.',
-                flags: MessageFlags.Ephemeral
-            });
         }
         if (interaction.isButton() && interaction.customId === 'submit_button') {
             const guildId = interaction.guildId;
             const userId = interaction.user.id;
             const selections = userSelections.get(userId);
-            if (!selections) {
-                await interaction.reply({
-                    content: 'No settings have been set yet.',
-                    flags: MessageFlags.Ephemeral
-
+            
+            try {
+                // Defer reply to prevent timeout
+                await interaction.deferReply({ ephemeral: true });
+                
+                if (!selections) {
+                    await interaction.editReply({
+                        content: 'No settings have been set yet.'
+                    });
+                    return;
+                }
+                if (!guildId) {
+                    await interaction.editReply({
+                        content: 'This command can only be used in a server.'
+                    });
+                    return;
+                }
+                
+                const userSettings = loadUserSettings();
+                if (!userSettings[guildId]) {
+                    userSettings[guildId] = {};
+                }
+                userSettings[guildId][userId] = {
+                    trigger: selections.trigger,
+                    channels: selections.voiceChannels,
+                    VIPS: selections.VIPS,
+                    tracking: false
+                };
+                saveUserSettings(userSettings);
+                userSelections.delete(userId);
+                
+                await interaction.editReply({
+                    content: 'Your settings have been saved!'
                 });
-                return;
+            } catch (error) {
+                console.error('Failed to handle submit button:', error);
+                try {
+                    if (!interaction.replied && !interaction.deferred) {
+                        await interaction.reply({
+                            content: 'Error saving settings. Please try again.',
+                            flags: MessageFlags.Ephemeral
+                        });
+                    } else {
+                        await interaction.editReply({
+                            content: 'Error saving settings. Please try again.'
+                        });
+                    }
+                } catch (replyError) {
+                    console.error('Failed to send error message:', replyError);
+                }
             }
-            if (!guildId) {
-                await interaction.reply({
-                    content: 'This command can only be used in a server.',
-                    flags: MessageFlags.Ephemeral
-
-                });
-                return;
-            }
-            const userSettings = loadUserSettings();
-            if (!userSettings[guildId]) {
-                userSettings[guildId] = {};
-            }
-            userSettings[guildId][userId] = {
-                trigger: selections.trigger,
-                channels: selections.voiceChannels,
-                VIPS: selections.VIPS,
-                tracking: false
-            };
-            saveUserSettings(userSettings);
-            userSelections.delete(userId);
-            await interaction.reply({
-                content: 'Your settings have been saved!',
-                flags: MessageFlags.Ephemeral
-
-            });
         }
         if (interaction.isAnySelectMenu()) {
-            //handle button interactions
-            console.log('Select menu interaction received.');
+            // Handle select menu interactions
+            console.log('Select menu interaction received:', interaction.customId);
             const userId = interaction.user.id;
             let selections = userSelections.get(userId) || {};
-            switch (interaction.customId) {
-                case 'vc_select_menu':
-                    console.log('Matched vc');
-                    selections.voiceChannels = interaction.values;
-                    break;
-                case 'member_select_menu':
-                    console.log('Matched member');
-
-                    selections.VIPS = interaction.values;
-                    break;
-                case 'trigger_select_menu':
-                    console.log('Matched trigger');
-
-                    selections.trigger = interaction.values[0];
-                    break;
+            
+            try {
+                switch (interaction.customId) {
+                    case 'vc_select_menu':
+                        console.log('Matched vc');
+                        selections.voiceChannels = interaction.values;
+                        break;
+                    case 'member_select_menu':
+                        console.log('Matched member');
+                        selections.VIPS = interaction.values;
+                        break;
+                    case 'trigger_select_menu':
+                        console.log('Matched trigger');
+                        selections.trigger = interaction.values[0];
+                        break;
+                    default:
+                        console.log('Unknown select menu:', interaction.customId);
+                        return;
+                }
+                
+                userSelections.set(userId, selections);
+                
+                // // Defer reply to prevent timeout
+                // await interaction.deferReply({ ephemeral: true });
+                // await interaction.editReply({
+                //     content: 'Saved! Submit to save your settings.'
+                // });
+            } catch (error) {
+                console.error('Failed to handle select menu interaction:', error);
+                try {
+                    if (!interaction.replied && !interaction.deferred) {
+                        await interaction.reply({
+                            content: 'Error saving selection. Please try again.',
+                            flags: MessageFlags.Ephemeral
+                        });
+                    } else {
+                        await interaction.editReply({
+                            content: 'Error saving selection. Please try again.'
+                        });
+                    }
+                } catch (replyError) {
+                    console.error('Failed to send error message:', replyError);
+                }
             }
-            userSelections.set(userId, selections);
-            await interaction.reply({
-                content: 'Saved! Submit to save your settings.',
-                flags: MessageFlags.Ephemeral
-
-            });
         }
     }
 }

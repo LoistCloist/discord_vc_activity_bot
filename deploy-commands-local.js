@@ -23,7 +23,7 @@ const rest = new REST({ version: '10' }).setToken(token);
 
 (async () => {
     try {
-        guildId = "1258899802016583721";
+        guildId = "1172226209824911420";
         //for (const guildId of guildIds) {
             console.log(`Registering commands for guild: ${guildId}`);
             await rest.put(

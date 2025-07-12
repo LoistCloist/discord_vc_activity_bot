@@ -7,26 +7,37 @@ module.exports = {
                 .setName('lelper_settings')
                 .setDescription('Change your Lelper bot settings.'),
     async execute(interaction) {
-        const voice_channels = await interaction.guild.channels.fetch();
-        const members = await interaction.guild.members.fetch();
-        const voiceChannelOptions = [{label: 'Any', value: 'ANY'}, voice_channels
-                                        .filter(c => c.type === 2)
-                                        .map(vc => ({
-                                            label: vc.name,
-                                            value: vc.id
-                                        }))];
+        // Defer the reply immediately to prevent timeout
+        await interaction.deferReply({ ephemeral: true });
+        
+        try {
+            // Fetch only voice channels and members, with limits
+            const voice_channels = await interaction.guild.channels.fetch();
+            const members = await interaction.guild.members.fetch({ limit: 100 }); // Limit to 100 members for performance
+        const voiceChannelOptions = [
+            {label: 'Any', value: 'ANY'}, 
+            ...voice_channels
+                .filter(c => c.type === 2)
+                .map(vc => ({
+                    label: vc.name,
+                    value: vc.id
+                }))
+        ];
         const voiceSelectMenu = new StringSelectMenuBuilder()
                                     .setCustomId('vc_select_menu')
                                     .setPlaceholder('Select voice channels')
                                     .setMinValues(1)
                                     .setMaxValues(Math.min(25, voiceChannelOptions.length))
-                                    .addOptions([...voiceChannelOptions].slice(0,25));
-        const memberOptions = [{label: 'Any', value: 'ANY'}, ...members
-                                .filter(m => !m.user.bot)
-                                .map(m => ({
-                                    label: m.user.username,
-                                    value: m.user.id
-                                }))];
+                                    .addOptions(voiceChannelOptions.slice(0,25));
+        const memberOptions = [
+            {label: 'Any', value: 'ANY'}, 
+            ...members
+                .filter(m => !m.user.bot)
+                .map(m => ({
+                    label: m.user.username,
+                    value: m.user.id
+                }))
+        ];
         const memberSelectMenu = new StringSelectMenuBuilder()
                                 .setCustomId('member_select_menu')
                                 .setPlaceholder('Select users')
@@ -47,11 +58,21 @@ module.exports = {
         const row2 = new ActionRowBuilder().addComponents(memberSelectMenu);
         const row3 = new ActionRowBuilder().addComponents(triggerWeightSelectMenu);
         const row4 = new ActionRowBuilder().addComponents(submitButton);
-        await interaction.reply({
+        
+        await interaction.editReply({
             content: 'Select your preferences.',
-            components: [row1, row2, row3, row4],
-            ephemeral: true
+            components: [row1, row2, row3, row4]
         });
+        } catch (error) {
+            console.error('Error in lelper_settings command:', error);
+            try {
+                await interaction.editReply({
+                    content: 'There was an error setting up the settings menu. Please try again.',
+                });
+            } catch (editError) {
+                console.error('Failed to send error message:', editError);
+            }
+        }
     }
 };
 

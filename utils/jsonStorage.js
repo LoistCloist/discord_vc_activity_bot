@@ -94,6 +94,40 @@ function removeDMMessage(guildId, userId, channelId) {
     saveDMMessages(dmMessages);
 }
 
+// Send or edit a DM message
+async function sendOrEditDM(user, guildId, userId, channelId, content) {
+    try {
+        const existingMessageId = getDMMessage(guildId, userId, channelId);
+        
+        if (existingMessageId) {
+            // Try to edit existing message
+            try {
+                // Ensure DM channel exists
+                if (!user.dmChannel) {
+                    await user.createDM();
+                }
+                const existingMessage = await user.dmChannel.messages.fetch(existingMessageId);
+                await existingMessage.edit(content);
+                return existingMessage;
+            } catch (editError) {
+                // If editing fails (message not found, etc.), send a new message
+                console.log(`Failed to edit existing DM, sending new one: ${editError.message}`);
+                const newMessage = await user.send(content);
+                storeDMMessage(guildId, userId, channelId, newMessage.id);
+                return newMessage;
+            }
+        } else {
+            // Send new message
+            const newMessage = await user.send(content);
+            storeDMMessage(guildId, userId, channelId, newMessage.id);
+            return newMessage;
+        }
+    } catch (error) {
+        console.error('Failed to send or edit DM:', error);
+        throw error;
+    }
+}
+
 module.exports = {
     loadBotChannels,
     saveBotChannels,
@@ -107,5 +141,6 @@ module.exports = {
     saveDMMessages,
     storeDMMessage,
     getDMMessage,
-    removeDMMessage
+    removeDMMessage,
+    sendOrEditDM
 }

@@ -19,6 +19,8 @@ module.exports = {
                             content: 'Error executing this command', 
                             flags: MessageFlags.Ephemeral
                         });
+                    } else if (!interaction.isRepliable()) {
+                        console.log('Interaction is not repliable, skipping error response');
                     } else {
                         await interaction.reply({
                             content: `There was an error executing this command!`, 
@@ -85,10 +87,12 @@ module.exports = {
                 console.error('Failed to handle submit button:', error);
                 try {
                     if (!interaction.replied && !interaction.deferred) {
-                        await interaction.reply({
-                            content: 'Error saving settings. Please try again.',
-                            flags: MessageFlags.Ephemeral
-                        });
+                        if (interaction.isRepliable()) {
+                            await interaction.reply({
+                                content: 'Error saving settings. Please try again.',
+                                flags: MessageFlags.Ephemeral
+                            });
+                        }
                     } else {
                         await interaction.editReply({
                             content: 'Error saving settings. Please try again.'
@@ -102,22 +106,26 @@ module.exports = {
         if (interaction.isAnySelectMenu()) {
             // Handle select menu interactions
             console.log('Select menu interaction received:', interaction.customId);
+            console.log('Select menu values:', interaction.values);
             const userId = interaction.user.id;
             let selections = userSelections.get(userId) || {};
             
             try {
                 switch (interaction.customId) {
                     case 'vc_select_menu':
-                        console.log('Matched vc');
+                        console.log('Matched vc_select_menu');
                         selections.voiceChannels = interaction.values;
+                        console.log('Updated voiceChannels:', selections.voiceChannels);
                         break;
                     case 'member_select_menu':
-                        console.log('Matched member');
+                        console.log('Matched member_select_menu');
                         selections.VIPS = interaction.values;
+                        console.log('Updated VIPS:', selections.VIPS);
                         break;
                     case 'trigger_select_menu':
-                        console.log('Matched trigger');
+                        console.log('Matched trigger_select_menu');
                         selections.trigger = interaction.values[0];
+                        console.log('Updated trigger:', selections.trigger);
                         break;
                     default:
                         console.log('Unknown select menu:', interaction.customId);
@@ -125,20 +133,20 @@ module.exports = {
                 }
                 
                 userSelections.set(userId, selections);
+                console.log('Updated selections for user:', userId, selections);
                 
-                // // Defer reply to prevent timeout
-                // await interaction.deferReply({ ephemeral: true });
-                // await interaction.editReply({
-                //     content: 'Saved! Submit to save your settings.'
-                // });
+                // Acknowledge the interaction to prevent timeout without sending a message
+                await interaction.deferUpdate();
             } catch (error) {
                 console.error('Failed to handle select menu interaction:', error);
                 try {
-                    if (!interaction.replied && !interaction.deferred) {
-                        await interaction.reply({
-                            content: 'Error saving selection. Please try again.',
-                            flags: MessageFlags.Ephemeral
-                        });
+                if (!interaction.replied && !interaction.deferred) {
+                        if (interaction.isRepliable()) {
+                            await interaction.reply({
+                                content: 'Error saving selection. Please try again.',
+                                flags: MessageFlags.Ephemeral
+                            });
+                        }
                     } else {
                         await interaction.editReply({
                             content: 'Error saving selection. Please try again.'

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType } = require('discord.js');
 const path = require('path');
 const { loadUserSettings, saveUserSettings } = require(path.join(__dirname, '../utils/jsonStorage.js'));
 
@@ -12,17 +12,18 @@ module.exports = {
         
         try {
             // Fetch only voice channels and members, with limits
-            const voice_channels = await interaction.guild.channels.fetch();
+            const voice_channels = interaction.guild.channels.cache.filter(channel => channel.type === ChannelType.GuildVoice);
+            console.log('Found voice channels:', voice_channels.map(vc => ({ name: vc.name, id: vc.id })));
             const members = await interaction.guild.members.fetch({ limit: 100 }); // Limit to 100 members for performance
         const voiceChannelOptions = [
             {label: 'Any', value: 'ANY'}, 
             ...voice_channels
-                .filter(c => c.type === 2)
                 .map(vc => ({
                     label: vc.name,
                     value: vc.id
                 }))
         ];
+        console.log('Voice channel options:', voiceChannelOptions);
         const voiceSelectMenu = new StringSelectMenuBuilder()
                                     .setCustomId('vc_select_menu')
                                     .setPlaceholder('Select voice channels')

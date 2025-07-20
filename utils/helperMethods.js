@@ -1,58 +1,28 @@
-const { loadUserSettings, storeDMMessage, getDMMessage, removeDMMessage } = require('./jsonStorage.js');
+const { saveActiveChannels, loadActiveChannels } = require('../utils/jsonStorage.js');
 
-/**
- * Send or edit a DM notification to a user
- * @param {Object} user - Discord user object
- * @param {string} guildId - Guild ID
- * @param {string} channelId - Voice channel ID
- * @param {string} content - Message content
- * @param {Object} client - Discord client
- * @returns {Promise<boolean>} - Success status
- */
-async function sendOrEditDM(user, guildId, channelId, content, client) {
+async function sendDM(client, targetUserId, message) {
     try {
-        // Check if we have a stored message ID for this user/channel
-        const storedMessageId = getDMMessage(guildId, user.id, channelId);
-        
-        if (storedMessageId) {
-            // Try to edit existing message
-            try {
-                const dmChannel = await user.createDM();
-                const message = await dmChannel.messages.fetch(storedMessageId);
-                await message.edit(content);
-                return true;
-            } catch (error) {
-                // Message might be too old or deleted, fall back to sending new message
-                console.log(`Could not edit message ${storedMessageId}, sending new message`);
-                removeDMMessage(guildId, user.id, channelId);
-            }
-        }
-        
-        // Send new message
-        const dmChannel = await user.createDM();
-        const message = await dmChannel.send(content);
-        
-        // Store the new message ID
-        storeDMMessage(guildId, user.id, channelId, message.id);
-        return true;
-        
+        const user = await client.users.fetch(targetUserId);
+        await user.send(message);
+        console.log(`DM sent to user ${targetUserId} - ${user.username}`);
     } catch (error) {
-        console.error('Failed to send/edit DM:', error);
-        return false;
+        console.error(`Failed to send DM to user ${targertUserId} - ${user.username}: `, error);
     }
 }
-
-/**
- * Clear stored DM message for a user/channel
- * @param {string} guildId - Guild ID
- * @param {string} userId - User ID
- * @param {string} channelId - Voice channel ID
- */
-function clearDMMessage(guildId, userId, channelId) {
-    removeDMMessage(guildId, userId, channelId);
+function makeChannelActive(activeChannels, guildId, userId, targetChannelId) {
+    if (!activeChannels[guildId]) activeChannels[guildId] = {};
+    if (!Array.isArray(activeChannels[guildId][userId])) activeChannels[guildId][userId] = [];
+    activeChannels[guildId][userId].push(targetChannelId);
+    saveActiveChannels(activeChannels);
 }
-
-module.exports = {
-    sendOrEditDM,
-    clearDMMessage
-};
+function makeChannelDormant(activeChannels, guildId, userId, targetChannelId) {
+    if (!activeChannels[guildId]) return;
+    if (!Array.isArray(activeChannels[guildId][userId])) return;
+    activeChannels[guildId][userId] = activeChannels[guildId][userId].filter(id => id !== targetChannelId);
+    saveActiveChannels(activeChannels);
+}
+module.exports = { 
+    sendDM,
+    makeChannelActive,
+    makeChannelDormant
+}

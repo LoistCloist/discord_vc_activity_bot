@@ -1,30 +1,4 @@
 {
-  "GuildID": {
-    "UserID": {
-      "trigger_weight": 2,
-      "Channels": [
-        "ChannelID",
-        "ChannelID2"
-      ],
-      "VIPS": [
-        "name1,",
-        "name2"
-      ],
-      "tracking": false
-    }
-  },
-  "1258899802016583721": {
-    "379623574304063508": {
-      "trigger": "1",
-      "channels": [
-        "ANY"
-      ],
-      "VIPS": [
-        "397170452214317066"
-      ],
-      "tracking": true
-    }
-  },
   "1172226209824911420": {
     "379623574304063508": {
       "trigger": "1",
@@ -32,9 +6,9 @@
         "ANY"
       ],
       "VIPS": [
-        "409144933530992641"
+        "ANY"
       ],
-      "tracking": false
+      "tracking": true
     }
   }
 }

@@ -125,12 +125,7 @@ module.exports = {
                 }
                 
                 userSelections.set(userId, selections);
-                
-                // // Defer reply to prevent timeout
-                // await interaction.deferReply({ ephemeral: true });
-                // await interaction.editReply({
-                //     content: 'Saved! Submit to save your settings.'
-                // });
+                await interaction.deferUpdate();
             } catch (error) {
                 console.error('Failed to handle select menu interaction:', error);
                 try {
